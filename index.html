@@ -184,9 +184,181 @@
     color: #1a5a1a;
     margin-top: 3px;
   }
+  /* Splash Screen */
+  #splash {
+    position: fixed;
+    inset: 0;
+    background: #030a03;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+  #splash-title {
+    font-size: 72px;
+    font-weight: bold;
+    color: #00ff41;
+    letter-spacing: 16px;
+    text-shadow: 0 0 40px #00ff41, 0 0 80px #00aa2a;
+    margin-bottom: 14px;
+  }
+  #splash-sub {
+    font-size: 13px;
+    color: #3a7a3a;
+    letter-spacing: 4px;
+    margin-bottom: 60px;
+  }
+  #splash-btn {
+    background: #0a2a0a;
+    border: 2px solid #00ff41;
+    color: #00ff41;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 22px;
+    letter-spacing: 6px;
+    padding: 16px 48px;
+    cursor: pointer;
+    transition: background 0.2s, box-shadow 0.2s;
+  }
+  #splash-btn:hover { background: #0f3a0f; box-shadow: 0 0 24px #00ff41; }
+  #splash-credits-left {
+    position: absolute;
+    bottom: 20px;
+    left: 24px;
+    font-size: 11px;
+    color: #2a5a2a;
+    letter-spacing: 2px;
+  }
+  #splash-credits-right {
+    position: absolute;
+    bottom: 20px;
+    right: 24px;
+    font-size: 11px;
+    color: #2a5a2a;
+    letter-spacing: 2px;
+  }
+  /* Menu Overlay */
+  #menu-overlay {
+    position: fixed;
+    inset: 0;
+    background: #000000bb;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 900;
+  }
+  #menu-panel {
+    background: #020902;
+    border: 1px solid #1a5a1a;
+    padding: 32px 48px;
+    min-width: 320px;
+    text-align: center;
+  }
+  #menu-title {
+    font-size: 18px;
+    color: #00ff41;
+    letter-spacing: 4px;
+    margin-bottom: 24px;
+  }
+  .menu-opt {
+    display: block;
+    width: 100%;
+    background: #010901;
+    border: 1px solid #1a5a1a;
+    color: #00ff41;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 13px;
+    letter-spacing: 2px;
+    padding: 10px;
+    cursor: pointer;
+    margin-bottom: 8px;
+  }
+  .menu-opt:hover { background: #0f2a0f; border-color: #00ff41; }
+  #how-to-play {
+    display: none;
+    margin-top: 16px;
+    text-align: left;
+    font-size: 10px;
+    color: #5a9a5a;
+    line-height: 1.9;
+    border-top: 1px solid #1a3a1a;
+    padding-top: 12px;
+    max-height: 220px;
+    overflow-y: auto;
+  }
+  /* Header buttons */
+  #menu-open-btn, #tts-btn {
+    background: #0a2a0a;
+    border: 1px solid #1a5a1a;
+    color: #3a7a3a;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 3px 10px;
+    cursor: pointer;
+  }
+  #menu-open-btn:hover, #tts-btn:hover { background: #0f3a0f; border-color: #00ff41; color: #00ff41; }
+  #tts-btn.tts-on { color: #00ff41; border-color: #00aa41; }
+  /* Quick action buttons */
+  #quick-actions {
+    padding: 4px;
+    border-top: 1px solid #1a3a1a;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    flex-shrink: 0;
+  }
+  .quick-btn {
+    background: #010901;
+    border: 1px solid #1a4a1a;
+    color: #7a9a7a;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 9px;
+    padding: 3px 6px;
+    cursor: pointer;
+    flex: 1 1 auto;
+    text-align: center;
+    min-width: 80px;
+  }
+  .quick-btn:hover { background: #0a1a0a; border-color: #00ff41; color: #00ff41; }
 </style>
 </head>
 <body>
+
+<!-- Splash Screen -->
+<div id="splash">
+  <div id="splash-title">◈ SQUAWK</div>
+  <div id="splash-sub">GROUND CONTROL SIMULATION · EGLL HEATHROW</div>
+  <button id="splash-btn">BEGIN SHIFT</button>
+  <div id="splash-credits-left">Completely vibe coded</div>
+  <div id="splash-credits-right">Made by Vyom</div>
+</div>
+
+<!-- Menu Overlay -->
+<div id="menu-overlay">
+  <div id="menu-panel">
+    <div id="menu-title">◈ MENU</div>
+    <button class="menu-opt" id="menu-resume">RESUME</button>
+    <button class="menu-opt" id="menu-restart">RESTART</button>
+    <button class="menu-opt" id="menu-howto">HOW TO PLAY</button>
+    <button class="menu-opt" id="menu-tts">TTS: ON</button>
+    <button class="menu-opt" id="menu-quit">QUIT TO HOME</button>
+    <div id="how-to-play">
+      <strong style="color:#00ff41">PHRASEOLOGY GUIDE</strong><br><br>
+      PUSHBACK:<br>
+      &nbsp;[callsign], Heathrow Ground, pushback approved<br><br>
+      TAXI:<br>
+      &nbsp;[callsign], Heathrow Ground, taxi to holding point Alpha 1 via Alpha<br><br>
+      CROSS RUNWAY:<br>
+      &nbsp;[callsign], Heathrow Ground, cross runway 09L/27R<br><br>
+      HOLDING POINTS:<br>
+      &nbsp;Alpha 1 = H/P 09L west &nbsp;|&nbsp; Alpha 2 = H/P 27R east<br>
+      &nbsp;Delta 1 = H/P 09R west &nbsp;|&nbsp; Delta 2 = H/P 27L east<br><br>
+      COLOURS:<br>
+      &nbsp;Green = taxiing &nbsp;|&nbsp; Cyan = holding short &nbsp;|&nbsp; Orange = needs crossing clearance
+    </div>
+  </div>
+</div>
 
 <div id="header">
   <div>
@@ -196,6 +368,8 @@
   <div id="score-display">SCORE: <span id="score-val">0</span></div>
   <div id="incidents-display">INCIDENTS: <span id="inc-val">0</span></div>
   <div id="clock">--:--:-- Z</div>
+  <button id="tts-btn" class="tts-on">📢 TTS</button>
+  <button id="menu-open-btn">☰ MENU</button>
 </div>
 
 <div id="main">
@@ -207,6 +381,7 @@
     <div id="strips-container"></div>
     <div id="log-title">▶ RADIO LOG · 121.700 MHz</div>
     <div id="radio-log"></div>
+    <div id="quick-actions"></div>
   </div>
 </div>
 
@@ -497,6 +672,9 @@ let spawnTimer = 0;
 let usedCallsigns = new Set();
 let aircraft = [];
 let logLines = [];
+let gameRunning = false;
+let ttsEnabled = true;
+let gameLoopGen = 0;
 
 // All gate IDs
 const ALL_GATES = Object.keys(NODES).filter(id => NODES[id].type === 'gate');
@@ -530,9 +708,20 @@ function log(msg, cls='log-system') {
   renderLog();
 }
 function logATC(msg)    { log(msg, 'log-atc'); }
-function logPilot(msg)  { log(msg, 'log-pilot'); }
+function logPilot(msg)  { log(msg, 'log-pilot'); speak(msg); }
 function logSys(msg)    { log(msg, 'log-system'); }
 function logWarn(msg)   { log(msg, 'log-warn'); }
+
+// ─────────────────────────────────────────────────────────────
+//  TEXT TO SPEECH
+// ─────────────────────────────────────────────────────────────
+function speak(text) {
+  if (!ttsEnabled || !window.speechSynthesis) return;
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.rate = 1.25;
+  utter.pitch = 1.0;
+  window.speechSynthesis.speak(utter);
+}
 
 function renderLog() {
   const el = document.getElementById('radio-log');
@@ -878,6 +1067,33 @@ function updateStrips() {
     });
     container.appendChild(div);
   }
+  const selAC = aircraft.find(a => a.callsign === selectedAC && a.state !== 'DEPARTED');
+  updateQuickActions(selAC || null);
+}
+
+function updateQuickActions(ac) {
+  const container = document.getElementById('quick-actions');
+  container.innerHTML = '';
+  if (!ac) return;
+  const cs = ac.callsign;
+  const gnd = 'Heathrow Ground';
+  const fill = (phrase) => {
+    document.getElementById('cmd-input').value = `${cs}, ${gnd}, ${phrase}`;
+    document.getElementById('cmd-input').focus();
+  };
+  const makeBtn = (label, phrase) => {
+    const btn = document.createElement('button');
+    btn.className = 'quick-btn';
+    btn.textContent = label;
+    btn.addEventListener('click', () => fill(phrase));
+    container.appendChild(btn);
+  };
+  makeBtn('Pushback Approved', 'pushback approved');
+  makeBtn('Taxi to 09L', 'taxi to holding point Alpha 1 via Alpha, Foxtrot');
+  makeBtn('Taxi to 27R', 'taxi to holding point Alpha 2 via Alpha, Echo');
+  makeBtn('Taxi to 09R', 'taxi to holding point Delta 1 via Delta, Foxtrot');
+  makeBtn('Taxi to 27L', 'taxi to holding point Delta 2 via Delta, Echo');
+  makeBtn('Cross Runway', 'cross runway 09L/27R');
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -920,18 +1136,17 @@ function drawTaxiways() {
   // Helper to draw a taxiway segment
   const drawSeg = (x1,y1,x2,y2,col,width,cross) => {
     ctx.save();
-    ctx.strokeStyle = cross ? '#3a2a0a' : '#162a16';
-    ctx.lineWidth   = ts(9);
+    ctx.strokeStyle = cross ? '#4a3010' : '#243824';
+    ctx.lineWidth   = ts(10);
     ctx.lineCap     = 'round';
-    if (cross) ctx.setLineDash([ts(8), ts(6)]);
-    else ctx.setLineDash([]);
+    ctx.setLineDash([]);
     ctx.beginPath();
     ctx.moveTo(tx(x1), ty(y1));
     ctx.lineTo(tx(x2), ty(y2));
     ctx.stroke();
     // Centreline
-    ctx.strokeStyle = cross ? '#6a4a0a' : '#1a4a1a';
-    ctx.lineWidth   = ts(1.5);
+    ctx.strokeStyle = cross ? '#c88830' : '#6ab86a';
+    ctx.lineWidth   = ts(2);
     ctx.setLineDash([ts(10), ts(8)]);
     ctx.beginPath();
     ctx.moveTo(tx(x1), ty(y1));
@@ -955,31 +1170,31 @@ function drawTaxiways() {
 function drawRunways() {
   // 09L/27R north (y=200)
   ctx.save();
-  ctx.fillStyle = '#1a281a';
-  ctx.fillRect(tx(80), ty(190), tx(1120)-tx(80), ty(210)-ty(190));
+  ctx.fillStyle = '#1e321e';
+  ctx.fillRect(tx(80), ty(188), tx(1120)-tx(80), ty(213)-ty(188));
   // 09R/27L south (y=430)
-  ctx.fillRect(tx(80), ty(420), tx(1120)-tx(80), ty(440)-ty(420));
+  ctx.fillRect(tx(80), ty(418), tx(1120)-tx(80), ty(443)-ty(418));
   // Runway centerlines
-  ctx.strokeStyle = '#ffffff22';
-  ctx.lineWidth = ts(1.5);
+  ctx.strokeStyle = '#ffffff55';
+  ctx.lineWidth = ts(2);
   ctx.setLineDash([ts(20), ts(15)]);
   ctx.beginPath(); ctx.moveTo(tx(80),ty(200)); ctx.lineTo(tx(1120),ty(200)); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(tx(80),ty(430)); ctx.lineTo(tx(1120),ty(430)); ctx.stroke();
   ctx.setLineDash([]);
   // Threshold markings 09L/27R
   for (let i = 0; i < 6; i++) {
-    ctx.fillStyle = '#2a4a2a';
-    ctx.fillRect(tx(90 + i*12), ty(192), ts(8), ts(16));
-    ctx.fillRect(tx(1072 - i*12), ty(192), ts(8), ts(16));
+    ctx.fillStyle = '#4a8a4a';
+    ctx.fillRect(tx(90 + i*12), ty(191), ts(8), ts(18));
+    ctx.fillRect(tx(1072 - i*12), ty(191), ts(8), ts(18));
   }
   // Threshold markings 09R/27L
   for (let i = 0; i < 6; i++) {
-    ctx.fillRect(tx(90 + i*12), ty(422), ts(8), ts(16));
-    ctx.fillRect(tx(1072 - i*12), ty(422), ts(8), ts(16));
+    ctx.fillRect(tx(90 + i*12), ty(421), ts(8), ts(18));
+    ctx.fillRect(tx(1072 - i*12), ty(421), ts(8), ts(18));
   }
   // Labels
-  ctx.font = `bold ${ts(14)}px Courier New`;
-  ctx.fillStyle = '#2a5a2a';
+  ctx.font = `bold ${ts(15)}px Courier New`;
+  ctx.fillStyle = '#aaeaaa';
   ctx.fillText('09L', tx(88), ty(198));
   ctx.fillText('27R', tx(1075), ty(198));
   ctx.fillText('09R', tx(88), ty(428));
@@ -1045,7 +1260,7 @@ function drawHoldingBars() {
 
 function drawLabels() {
   ctx.save();
-  ctx.font = `${ts(9)}px Courier New`;
+  ctx.font = `bold ${ts(10)}px Courier New`;
   // Taxiway name labels along key positions
   const twLabels = [
     { text:'α ALPHA',   x:650, y:122 },
@@ -1055,12 +1270,12 @@ function drawLabels() {
     { text:'F FOXTROT', x:214, y:310 },
     { text:'E ECHO',    x:964, y:310 },
   ];
-  ctx.fillStyle = '#1a6a1a';
+  ctx.fillStyle = '#80c880';
   for (const l of twLabels) {
     ctx.fillText(l.text, tx(l.x), ty(l.y));
   }
   // Holding point labels (amber)
-  ctx.fillStyle = '#c8800a';
+  ctx.fillStyle = '#ffaa40';
   ctx.font = `bold ${ts(9)}px Courier New`;
   const hpLabels = [
     { id:'FH1',  offset:[-40,-10] },
@@ -1118,7 +1333,8 @@ function drawAircraft() {
 // ─────────────────────────────────────────────────────────────
 //  GAME LOOP
 // ─────────────────────────────────────────────────────────────
-function gameLoop(timestamp) {
+function gameLoop(timestamp, gen) {
+  if (!gameRunning || gen !== gameLoopGen) return;
   const dt = lastTime ? timestamp - lastTime : 16;
   lastTime = timestamp;
   gameTime += dt;
@@ -1153,7 +1369,7 @@ function gameLoop(timestamp) {
   // Render
   drawScene();
 
-  requestAnimationFrame(gameLoop);
+  requestAnimationFrame(ts => gameLoop(ts, gen));
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -1191,24 +1407,93 @@ document.getElementById('send-btn').addEventListener('click', () => {
 // ─────────────────────────────────────────────────────────────
 //  INIT
 // ─────────────────────────────────────────────────────────────
-window.addEventListener('resize', () => { resizeCanvas(); });
+function initGame() {
+  // Reset all state
+  score = 0; incidents = 0; selectedAC = null;
+  lastTime = 0; gameTime = 0; spawnTimer = 0;
+  usedCallsigns = new Set(); aircraft = [];
+  logLines = []; occupiedGates = new Set();
 
+  updateScoreDisplay();
+  updateStrips();
+  renderLog();
+
+  // Initial log messages
+  logATC('Heathrow Ground 121.700 MHz – Online');
+  logSys('SQUAWK Ground Simulation – EGLL');
+  logSys('Type instructions in the box below');
+
+  // Initial spawn
+  spawnAircraft();
+  spawnAircraft();
+  spawnTimer = getSpawnInterval();
+  updateStrips();
+
+  gameRunning = true;
+  gameLoopGen++;
+  const gen = gameLoopGen;
+  requestAnimationFrame(ts => gameLoop(ts, gen));
+}
+
+window.addEventListener('resize', () => { resizeCanvas(); });
 resizeCanvas();
 
-// Initial log messages
-logATC('Heathrow Ground 121.700 MHz – Online');
-logSys('SQUAWK Ground Simulation – EGLL');
-logSys('Type instructions in the box below');
+// ── Splash screen ──
+document.getElementById('splash-btn').addEventListener('click', () => {
+  document.getElementById('splash').style.display = 'none';
+  initGame();
+});
 
-// Initial spawn
-spawnAircraft();
-spawnAircraft();
-spawnTimer = getSpawnInterval();
+// ── Menu ──
+function openMenu() {
+  document.getElementById('menu-overlay').style.display = 'flex';
+}
+function closeMenu() {
+  document.getElementById('menu-overlay').style.display = 'none';
+  document.getElementById('how-to-play').style.display = 'none';
+}
 
-updateStrips();
-updateScoreDisplay();
+document.getElementById('menu-open-btn').addEventListener('click', openMenu);
 
-requestAnimationFrame(gameLoop);
+document.getElementById('menu-resume').addEventListener('click', closeMenu);
+
+document.getElementById('menu-restart').addEventListener('click', () => {
+  closeMenu();
+  gameRunning = false;
+  initGame();
+});
+
+document.getElementById('menu-howto').addEventListener('click', () => {
+  const htp = document.getElementById('how-to-play');
+  htp.style.display = htp.style.display === 'block' ? 'none' : 'block';
+});
+
+document.getElementById('menu-quit').addEventListener('click', () => {
+  gameRunning = false;
+  closeMenu();
+  document.getElementById('splash').style.display = 'flex';
+});
+
+document.getElementById('menu-tts').addEventListener('click', () => {
+  ttsEnabled = !ttsEnabled;
+  const btn = document.getElementById('menu-tts');
+  btn.textContent = ttsEnabled ? 'TTS: ON' : 'TTS: OFF';
+  updateTtsBtn();
+});
+
+// ── TTS header button ──
+function updateTtsBtn() {
+  const btn = document.getElementById('tts-btn');
+  btn.textContent = ttsEnabled ? '📢 TTS' : '🔇 TTS';
+  btn.classList.toggle('tts-on', ttsEnabled);
+}
+
+document.getElementById('tts-btn').addEventListener('click', () => {
+  ttsEnabled = !ttsEnabled;
+  const menuBtn = document.getElementById('menu-tts');
+  menuBtn.textContent = ttsEnabled ? 'TTS: ON' : 'TTS: OFF';
+  updateTtsBtn();
+});
 </script>
 </body>
 </html>
