@@ -1,0 +1,1212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SQUAWK - Ground Control Simulation</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #050a05;
+    color: #00ff41;
+    font-family: 'Courier New', Courier, monospace;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    user-select: none;
+  }
+  /* Header */
+  #header {
+    display: flex;
+    align-items: center;
+    padding: 6px 16px;
+    border-bottom: 1px solid #1a3a1a;
+    background: #020702;
+    gap: 20px;
+    flex-shrink: 0;
+  }
+  #title {
+    font-size: 22px;
+    font-weight: bold;
+    color: #00ff41;
+    letter-spacing: 4px;
+  }
+  #tagline {
+    font-size: 10px;
+    color: #3a7a3a;
+    letter-spacing: 2px;
+  }
+  #clock {
+    margin-left: auto;
+    font-size: 14px;
+    color: #ffb347;
+    letter-spacing: 2px;
+  }
+  #score-display {
+    font-size: 13px;
+    color: #00ff41;
+    letter-spacing: 1px;
+  }
+  #incidents-display {
+    font-size: 13px;
+    color: #ff4444;
+    letter-spacing: 1px;
+  }
+  /* Main area */
+  #main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+  /* Canvas */
+  #canvas-wrap {
+    flex: 1;
+    position: relative;
+    background: #020802;
+    overflow: hidden;
+  }
+  #atcCanvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  /* Sidebar */
+  #sidebar {
+    width: 270px;
+    background: #020702;
+    border-left: 1px solid #1a3a1a;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+  }
+  #sidebar-title {
+    font-size: 10px;
+    color: #3a7a3a;
+    letter-spacing: 2px;
+    padding: 6px 10px;
+    border-bottom: 1px solid #1a3a1a;
+    background: #010501;
+  }
+  #strips-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 4px;
+  }
+  #strips-container::-webkit-scrollbar { width: 4px; }
+  #strips-container::-webkit-scrollbar-track { background: #010501; }
+  #strips-container::-webkit-scrollbar-thumb { background: #1a5a1a; }
+  .flight-strip {
+    border: 1px solid #1a5a1a;
+    margin: 3px 0;
+    padding: 6px 8px;
+    cursor: pointer;
+    background: #010901;
+    transition: background 0.1s;
+    position: relative;
+  }
+  .flight-strip:hover { background: #021402; }
+  .flight-strip.selected { border-color: #ffb347; background: #1a0e00; }
+  .flight-strip.delayed { border-color: #ff4444; }
+  .flight-strip.active { border-color: #00ff41; }
+  .strip-callsign { font-size: 13px; font-weight: bold; color: #00ff41; }
+  .flight-strip.selected .strip-callsign { color: #ffb347; }
+  .strip-info { font-size: 10px; color: #3a7a3a; margin-top: 2px; }
+  .strip-status { font-size: 10px; color: #ffb347; }
+  /* Radio log */
+  #log-title {
+    font-size: 10px;
+    color: #3a7a3a;
+    letter-spacing: 2px;
+    padding: 6px 10px;
+    border-top: 1px solid #1a3a1a;
+    border-bottom: 1px solid #1a3a1a;
+    background: #010501;
+  }
+  #radio-log {
+    height: 180px;
+    overflow-y: auto;
+    padding: 4px 8px;
+    font-size: 10px;
+    line-height: 1.5;
+  }
+  #radio-log::-webkit-scrollbar { width: 4px; }
+  #radio-log::-webkit-scrollbar-track { background: #010501; }
+  #radio-log::-webkit-scrollbar-thumb { background: #1a5a1a; }
+  .log-atc { color: #ffb347; }
+  .log-pilot { color: #00ff41; }
+  .log-system { color: #ff6600; }
+  .log-warn { color: #ff4444; }
+  /* Bottom bar */
+  #bottom-bar {
+    background: #010501;
+    border-top: 1px solid #1a3a1a;
+    padding: 6px 12px;
+    flex-shrink: 0;
+  }
+  #freq-bar {
+    font-size: 10px;
+    color: #3a7a3a;
+    margin-bottom: 4px;
+    letter-spacing: 1px;
+  }
+  #input-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  #input-label { font-size: 11px; color: #ffb347; }
+  #cmd-input {
+    flex: 1;
+    background: #010901;
+    border: 1px solid #1a5a1a;
+    color: #00ff41;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 12px;
+    padding: 4px 8px;
+    outline: none;
+  }
+  #cmd-input:focus { border-color: #00ff41; }
+  #cmd-input::placeholder { color: #1a5a1a; }
+  #send-btn {
+    background: #0a2a0a;
+    border: 1px solid #1a5a1a;
+    color: #00ff41;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 11px;
+    padding: 4px 12px;
+    cursor: pointer;
+  }
+  #send-btn:hover { background: #0f3a0f; border-color: #00ff41; }
+  #hint-text {
+    font-size: 9px;
+    color: #1a5a1a;
+    margin-top: 3px;
+  }
+</style>
+</head>
+<body>
+
+<div id="header">
+  <div>
+    <div id="title">◈ SQUAWK</div>
+    <div id="tagline">GROUND CONTROL SIMULATION · EGLL HEATHROW</div>
+  </div>
+  <div id="score-display">SCORE: <span id="score-val">0</span></div>
+  <div id="incidents-display">INCIDENTS: <span id="inc-val">0</span></div>
+  <div id="clock">--:--:-- Z</div>
+</div>
+
+<div id="main">
+  <div id="canvas-wrap">
+    <canvas id="atcCanvas"></canvas>
+  </div>
+  <div id="sidebar">
+    <div id="sidebar-title">▶ FLIGHT STRIPS</div>
+    <div id="strips-container"></div>
+    <div id="log-title">▶ RADIO LOG · 121.700 MHz</div>
+    <div id="radio-log"></div>
+  </div>
+</div>
+
+<div id="bottom-bar">
+  <div id="freq-bar">▌ HEATHROW GROUND · 121.700 MHz · ATIS: INFORMATION OSCAR</div>
+  <div id="input-row">
+    <span id="input-label">▶</span>
+    <input id="cmd-input" type="text" placeholder='e.g. BAW1, Heathrow Ground, pushback approved' autocomplete="off" spellcheck="false">
+    <button id="send-btn">SEND</button>
+  </div>
+  <div id="hint-text">
+    TAB=autocomplete callsign &nbsp;|&nbsp;
+    pushback approved &nbsp;|&nbsp;
+    taxi to holding point [Alpha 1] via [Alpha, Foxtrot] &nbsp;|&nbsp;
+    cross runway [09L]
+  </div>
+</div>
+
+<script>
+'use strict';
+
+// ─────────────────────────────────────────────────────────────
+//  CONSTANTS & CONFIG
+// ─────────────────────────────────────────────────────────────
+const LOGICAL_W = 1200;
+const LOGICAL_H = 700;
+const TAXI_SPEED = 38;      // units/sec
+const PUSH_SPEED = 16;      // units/sec
+const DEPART_DELAY_MIN = 8000;
+const DEPART_DELAY_MAX = 15000;
+const DELAY_WARN_MS = 120000;
+const SCORE_DEPART = 100;
+const SCORE_DELAY  = -25;
+
+const AIRLINES = [
+  { prefix: 'BAW', name: 'Speedbird' },
+  { prefix: 'EZY', name: 'Easy'      },
+  { prefix: 'RYR', name: 'Ryanair'   },
+  { prefix: 'VIR', name: 'Virgin'    },
+  { prefix: 'UAE', name: 'Emirates'  },
+  { prefix: 'QFA', name: 'Qantas'    },
+  { prefix: 'DLH', name: 'Lufthansa' },
+  { prefix: 'AFR', name: 'AirFrance' },
+  { prefix: 'SWR', name: 'Swiss'     },
+  { prefix: 'KLM', name: 'KLM'       },
+];
+const AC_TYPES = ['A320','B737','A380','B777','A319','B787','A321','B747'];
+
+// ─────────────────────────────────────────────────────────────
+//  TAXIWAY GRAPH NODES
+// ─────────────────────────────────────────────────────────────
+const NODES = {
+  // T5 Gates
+  T5G1:{ x:45,  y:120, label:'T5-G1', type:'gate',    terminal:'T5' },
+  T5G2:{ x:45,  y:165, label:'T5-G2', type:'gate',    terminal:'T5' },
+  T5G3:{ x:45,  y:215, label:'T5-G3', type:'gate',    terminal:'T5' },
+  T5G4:{ x:45,  y:320, label:'T5-G4', type:'gate',    terminal:'T5' },
+  T5G5:{ x:45,  y:370, label:'T5-G5', type:'gate',    terminal:'T5' },
+  T5G6:{ x:45,  y:420, label:'T5-G6', type:'gate',    terminal:'T5' },
+  // T2 Gates
+  T2G1:{ x:330, y:60,  label:'T2-G1', type:'gate',    terminal:'T2' },
+  T2G2:{ x:430, y:60,  label:'T2-G2', type:'gate',    terminal:'T2' },
+  T2G3:{ x:530, y:60,  label:'T2-G3', type:'gate',    terminal:'T2' },
+  // T3 Gates
+  T3G1:{ x:620, y:60,  label:'T3-G1', type:'gate',    terminal:'T3' },
+  T3G2:{ x:730, y:60,  label:'T3-G2', type:'gate',    terminal:'T3' },
+  T3G3:{ x:840, y:60,  label:'T3-G3', type:'gate',    terminal:'T3' },
+  // T4 Gates
+  T4G1:{ x:730, y:560, label:'T4-G1', type:'gate',    terminal:'T4' },
+  T4G2:{ x:840, y:560, label:'T4-G2', type:'gate',    terminal:'T4' },
+  T4G3:{ x:960, y:560, label:'T4-G3', type:'gate',    terminal:'T4' },
+  // Golf spurs (T5 north apron connector)
+  GL1: { x:115, y:120, label:'Golf 1',  type:'taxiway' },
+  GL2: { x:115, y:165, label:'Golf 2',  type:'taxiway' },
+  GL3: { x:115, y:215, label:'Golf 3',  type:'taxiway' },
+  // Hotel spurs (T5 south apron connector)
+  HT1: { x:115, y:320, label:'Hotel 1', type:'taxiway' },
+  HT2: { x:115, y:370, label:'Hotel 2', type:'taxiway' },
+  HT3: { x:115, y:420, label:'Hotel 3', type:'taxiway' },
+  // Foxtrot (west vertical connector)
+  FAL: { x:210, y:130, label:'Foxtrot/Alpha', type:'taxiway' },
+  FH1: { x:210, y:183, label:'Alpha 1',       type:'holding', runway:'09L/27R' },
+  FBR: { x:210, y:265, label:'Foxtrot/Bravo', type:'taxiway' },
+  FCH: { x:210, y:345, label:'Foxtrot/Charlie', type:'taxiway' },
+  FH2: { x:210, y:400, label:'Delta 1',       type:'holding', runway:'09R/27L' },
+  FDL: { x:210, y:468, label:'Foxtrot/Delta', type:'taxiway' },
+  // Alpha taxiway (north, y=130)
+  A1:  { x:280, y:130, label:'Alpha',   type:'taxiway' },
+  T2A1:{ x:330, y:130, label:'Alpha/T2',type:'taxiway' },
+  A2:  { x:430, y:130, label:'Alpha',   type:'taxiway' },
+  T2A2:{ x:530, y:130, label:'Alpha/T2',type:'taxiway' },
+  A3:  { x:580, y:130, label:'Alpha',   type:'taxiway' },
+  T3A1:{ x:620, y:130, label:'Alpha/T3',type:'taxiway' },
+  A4:  { x:730, y:130, label:'Alpha',   type:'taxiway' },
+  T3A2:{ x:840, y:130, label:'Alpha/T3',type:'taxiway' },
+  A5:  { x:880, y:130, label:'Alpha',   type:'taxiway' },
+  // Echo (east vertical connector)
+  EAL: { x:960, y:130, label:'Echo/Alpha',   type:'taxiway' },
+  EH1: { x:960, y:183, label:'Alpha 2',      type:'holding', runway:'09L/27R' },
+  EBR: { x:960, y:265, label:'Echo/Bravo',   type:'taxiway' },
+  ECH: { x:960, y:345, label:'Echo/Charlie', type:'taxiway' },
+  EH2: { x:960, y:400, label:'Delta 2',      type:'holding', runway:'09R/27L' },
+  EDL: { x:960, y:468, label:'Echo/Delta',   type:'taxiway' },
+  // Bravo taxiway (y=265)
+  B1:  { x:280, y:265, label:'Bravo', type:'taxiway' },
+  B2:  { x:430, y:265, label:'Bravo', type:'taxiway' },
+  B3:  { x:580, y:265, label:'Bravo', type:'taxiway' },
+  B4:  { x:730, y:265, label:'Bravo', type:'taxiway' },
+  B5:  { x:880, y:265, label:'Bravo', type:'taxiway' },
+  // Charlie taxiway (y=345)
+  C1:  { x:280, y:345, label:'Charlie', type:'taxiway' },
+  C2:  { x:430, y:345, label:'Charlie', type:'taxiway' },
+  C3:  { x:580, y:345, label:'Charlie', type:'taxiway' },
+  C4:  { x:730, y:345, label:'Charlie', type:'taxiway' },
+  C5:  { x:880, y:345, label:'Charlie', type:'taxiway' },
+  // Delta taxiway (y=468)
+  D1:  { x:280, y:468, label:'Delta', type:'taxiway' },
+  D2:  { x:430, y:468, label:'Delta', type:'taxiway' },
+  D3:  { x:580, y:468, label:'Delta', type:'taxiway' },
+  D4:  { x:730, y:468, label:'Delta', type:'taxiway' },
+  D5:  { x:880, y:468, label:'Delta', type:'taxiway' },
+  // T4 apron delta nodes (distinct from D4/D5, east of D5 toward EDL)
+  T4D2:{ x:920, y:468, label:'Delta/T4',type:'taxiway' },
+  T4D3:{ x:960, y:468, label:'Delta/T4',type:'taxiway' },
+  // Holding points (runway thresholds)
+  HP09L:{ x:140, y:183, label:'H/P 09L', type:'holdpoint', runway:'09L' },
+  HP27R:{ x:1060,y:183, label:'H/P 27R', type:'holdpoint', runway:'27R' },
+  HP09R:{ x:140, y:400, label:'H/P 09R', type:'holdpoint', runway:'09R' },
+  HP27L:{ x:1060,y:400, label:'H/P 27L', type:'holdpoint', runway:'27L' },
+};
+
+// ─────────────────────────────────────────────────────────────
+//  TAXIWAY GRAPH EDGES
+// ─────────────────────────────────────────────────────────────
+// Each edge: [nodeA, nodeB, taxiwayName, crossingRwy|null]
+// crossingRwy set means aircraft must have crossing clearance
+const EDGES_DEF = [
+  // T5 north gate → Golf spur
+  ['T5G1','GL1','Golf',null],
+  ['T5G2','GL2','Golf',null],
+  ['T5G3','GL3','Golf',null],
+  // Golf internal
+  ['GL1','GL2','Golf',null],
+  ['GL2','GL3','Golf',null],
+  // Golf → Foxtrot/Alpha
+  ['GL3','FAL','Golf',null],
+  // T5 south gate → Hotel spur
+  ['T5G4','HT1','Hotel',null],
+  ['T5G5','HT2','Hotel',null],
+  ['T5G6','HT3','Hotel',null],
+  // Hotel internal
+  ['HT1','HT2','Hotel',null],
+  ['HT2','HT3','Hotel',null],
+  // Hotel → Foxtrot
+  ['HT1','FBR','Hotel',null],
+  ['HT3','FDL','Hotel',null],
+  // Foxtrot vertical (with runway crossings)
+  ['FAL','FH1','Foxtrot',null],
+  ['FH1','FBR','Foxtrot','09L/27R'],   // crosses runway 09L/27R
+  ['FBR','FCH','Foxtrot',null],
+  ['FCH','FH2','Foxtrot',null],
+  ['FH2','FDL','Foxtrot','09R/27L'],   // crosses runway 09R/27L
+  // Alpha taxiway
+  ['FAL','A1',  'Alpha',null],
+  ['A1', 'T2A1','Alpha',null],
+  ['T2A1','A2', 'Alpha',null],
+  ['A2', 'T2A2','Alpha',null],
+  ['T2A2','A3', 'Alpha',null],
+  ['A3', 'T3A1','Alpha',null],
+  ['T3A1','A4', 'Alpha',null],
+  ['A4', 'T3A2','Alpha',null],
+  ['T3A2','A5', 'Alpha',null],
+  ['A5', 'EAL', 'Alpha',null],
+  // T2 gate spurs from Alpha
+  ['T2A1','T2G1','Alpha',null],
+  ['A2',  'T2G2','Alpha',null],
+  ['T2A2','T2G3','Alpha',null],
+  // T3 gate spurs from Alpha
+  ['T3A1','T3G1','Alpha',null],
+  ['A4',  'T3G2','Alpha',null],
+  ['T3A2','T3G3','Alpha',null],
+  // Echo vertical (with runway crossings)
+  ['EAL','EH1','Echo',null],
+  ['EH1','EBR','Echo','09L/27R'],
+  ['EBR','ECH','Echo',null],
+  ['ECH','EH2','Echo',null],
+  ['EH2','EDL','Echo','09R/27L'],
+  // Bravo taxiway
+  ['FBR','B1','Bravo',null],
+  ['B1','B2','Bravo',null],
+  ['B2','B3','Bravo',null],
+  ['B3','B4','Bravo',null],
+  ['B4','B5','Bravo',null],
+  ['B5','EBR','Bravo',null],
+  // Charlie taxiway
+  ['FCH','C1','Charlie',null],
+  ['C1','C2','Charlie',null],
+  ['C2','C3','Charlie',null],
+  ['C3','C4','Charlie',null],
+  ['C4','C5','Charlie',null],
+  ['C5','ECH','Charlie',null],
+  // Cross-connects Foxtrot/Echo between Bravo and Charlie
+  ['B1','C1','Foxtrot',null],
+  ['B5','C5','Echo',null],
+  // Delta taxiway – main chain continues to EDL; T4 gate spurs branch south
+  ['FDL','D1','Delta',null],
+  ['D1','D2','Delta',null],
+  ['D2','D3','Delta',null],
+  ['D3','D4','Delta',null],
+  ['D4','D5','Delta',null],
+  ['D5','T4D2','Delta',null],
+  ['T4D2','T4D3','Delta',null],
+  ['T4D3','EDL','Delta',null],
+  // T4 gate spurs from Delta (D4 serves T4G1, T4D2 serves T4G2, T4D3 serves T4G3)
+  ['D4','T4G1','Delta',null],
+  ['T4D2','T4G2','Delta',null],
+  ['T4D3','T4G3','Delta',null],
+  // Holding point connections
+  ['FH1','HP09L','Foxtrot',null],
+  ['EH1','HP27R','Echo',null],
+  ['FH2','HP09R','Foxtrot',null],
+  ['EH2','HP27L','Echo',null],
+];
+
+// Build adjacency list
+const GRAPH = {};
+for (const id in NODES) GRAPH[id] = [];
+for (const [a, b, tw, cross] of EDGES_DEF) {
+  GRAPH[a].push({ to: b, tw, cross });
+  GRAPH[b].push({ to: a, tw, cross });
+}
+
+// Holding point name → node ID mapping
+const HOLDING_ALIASES = {
+  'alpha 1': 'FH1', 'alpha1': 'FH1',
+  'alpha 2': 'EH1', 'alpha2': 'EH1',
+  'delta 1': 'FH2', 'delta1': 'FH2',
+  'delta 2': 'EH2', 'delta2': 'EH2',
+  'hp09l': 'HP09L', 'h/p 09l': 'HP09L',
+  'hp27r': 'HP27R', 'h/p 27r': 'HP27R',
+  'hp09r': 'HP09R', 'h/p 09r': 'HP09R',
+  'hp27l': 'HP27L', 'h/p 27l': 'HP27L',
+};
+
+// ─────────────────────────────────────────────────────────────
+//  BFS PATHFINDING
+// ─────────────────────────────────────────────────────────────
+function bfsPath(startId, goalId) {
+  if (startId === goalId) return [];
+  const prev = {};
+  const prevEdge = {};
+  const queue = [startId];
+  prev[startId] = null;
+  while (queue.length) {
+    const cur = queue.shift();
+    for (const edge of (GRAPH[cur] || [])) {
+      const { to } = edge;
+      if (!(to in prev)) {
+        prev[to] = cur;
+        prevEdge[to] = edge;
+        if (to === goalId) {
+          // reconstruct
+          const path = [];
+          let node = goalId;
+          while (node !== startId) {
+            path.unshift({ from: prev[node], to: node, edge: prevEdge[node] });
+            node = prev[node];
+          }
+          return path;
+        }
+        queue.push(to);
+      }
+    }
+  }
+  return null; // no path
+}
+
+// ─────────────────────────────────────────────────────────────
+//  GAME STATE
+// ─────────────────────────────────────────────────────────────
+let score = 0;
+let incidents = 0;
+let selectedAC = null;
+let lastTime = 0;
+let gameTime = 0; // ms elapsed
+let spawnTimer = 0;
+let usedCallsigns = new Set();
+let aircraft = [];
+let logLines = [];
+
+// All gate IDs
+const ALL_GATES = Object.keys(NODES).filter(id => NODES[id].type === 'gate');
+const HOLDING_NODES = new Set(['FH1','EH1','FH2','EH2','HP09L','HP27R','HP09R','HP27L']);
+
+// ─────────────────────────────────────────────────────────────
+//  UTILITY
+// ─────────────────────────────────────────────────────────────
+function rand(min, max) { return Math.random() * (max - min) + min; }
+function randInt(min, max) { return Math.floor(rand(min, max + 1)); }
+function randItem(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+function zuluTime() {
+  const d = new Date();
+  const h = String(d.getUTCHours()).padStart(2,'0');
+  const m = String(d.getUTCMinutes()).padStart(2,'0');
+  const s = String(d.getUTCSeconds()).padStart(2,'0');
+  return `${h}:${m}:${s}Z`;
+}
+
+function dist(ax, ay, bx, by) {
+  return Math.hypot(bx - ax, by - ay);
+}
+
+// ─────────────────────────────────────────────────────────────
+//  RADIO LOG
+// ─────────────────────────────────────────────────────────────
+function log(msg, cls='log-system') {
+  logLines.push({ msg, cls });
+  if (logLines.length > 120) logLines.shift();
+  renderLog();
+}
+function logATC(msg)    { log(msg, 'log-atc'); }
+function logPilot(msg)  { log(msg, 'log-pilot'); }
+function logSys(msg)    { log(msg, 'log-system'); }
+function logWarn(msg)   { log(msg, 'log-warn'); }
+
+function renderLog() {
+  const el = document.getElementById('radio-log');
+  el.innerHTML = logLines.map(l => `<div class="${l.cls}">${l.msg}</div>`).join('');
+  el.scrollTop = el.scrollHeight;
+}
+
+// ─────────────────────────────────────────────────────────────
+//  CALLSIGN GENERATION
+// ─────────────────────────────────────────────────────────────
+function generateCallsign() {
+  let cs;
+  let tries = 0;
+  do {
+    const al = randItem(AIRLINES);
+    const num = randInt(1, 999);
+    cs = `${al.prefix}${num}`;
+    tries++;
+  } while (usedCallsigns.has(cs) && tries < 200);
+  usedCallsigns.add(cs);
+  return cs;
+}
+
+function airlineName(cs) {
+  const al = AIRLINES.find(a => cs.startsWith(a.prefix));
+  return al ? al.name : cs;
+}
+
+// ─────────────────────────────────────────────────────────────
+//  AIRCRAFT CLASS
+// ─────────────────────────────────────────────────────────────
+// States: PARKED, PUSHBACK, TAXI, CROSSING, HOLDING, READY, DEPARTED
+class Aircraft {
+  constructor(callsign, gateId, acType) {
+    this.callsign = callsign;
+    this.acType   = acType;
+    this.gateId   = gateId;
+    this.nodeId   = gateId;      // current node
+    this.x        = NODES[gateId].x;
+    this.y        = NODES[gateId].y;
+    this.state    = 'PARKED';
+    this.path     = [];          // [{from,to,edge}]
+    this.pathIdx  = 0;
+    this.targetNodeId = null;
+    this.destId   = null;        // final destination node
+    this.destTaxiways = [];      // required taxiways from instruction
+    this.crossClearance = new Set(); // runways cleared to cross
+    this.spawnTime = Date.now();
+    this.delayWarned = false;
+    this.heading  = 0;           // degrees for triangle orientation
+    this.selected = false;
+    // pushback direction (away from terminal)
+    this.pushTarget = null;
+    this.runway = null;          // assigned runway
+  }
+
+  get statusLabel() {
+    return this.state;
+  }
+
+  // Begin pushback to a nearby taxiway node
+  startPushback() {
+    // Find nearest taxiway node connected to gate
+    const gate = NODES[this.gateId];
+    const neighbours = (GRAPH[this.gateId] || []);
+    if (!neighbours.length) { logWarn(`${this.callsign}: No pushback route`); return false; }
+    // Pick first non-gate neighbour
+    const tgt = neighbours.find(e => NODES[e.to].type !== 'gate') || neighbours[0];
+    this.pushTarget = tgt.to;
+    this.state = 'PUSHBACK';
+    this.runway = randItem(['09L','09R']);
+    logPilot(`${this.callsign}: Pushback approved, ${airlineName(this.callsign)}`);
+    return true;
+  }
+
+  // Issue taxi instruction
+  startTaxi(destId, taxiways) {
+    if (this.state !== 'PUSHBACK' && this.state !== 'HOLDING' && this.state !== 'PARKED') {
+      // already taxiing — redirect
+    }
+    const path = bfsPath(this.nodeId, destId);
+    if (!path) {
+      logWarn(`${this.callsign}: No path to ${destId}`);
+      logPilot(`${this.callsign}: Say again, unable`);
+      return false;
+    }
+    this.path = path;
+    this.pathIdx = 0;
+    this.destId = destId;
+    this.destTaxiways = taxiways.map(t => t.trim().toLowerCase());
+    this.state = 'TAXI';
+    const destLabel = NODES[destId].label;
+    const twStr = taxiways.join(', ');
+    logPilot(`${this.callsign}: Taxi to ${destLabel} via ${twStr}, ${airlineName(this.callsign)}`);
+    return true;
+  }
+
+  // Grant crossing clearance
+  grantCross(runway) {
+    this.crossClearance.add(runway);
+    if (this.state === 'CROSSING') {
+      this.state = 'TAXI';
+    }
+    logPilot(`${this.callsign}: Cross runway ${runway}, ${airlineName(this.callsign)}`);
+    return true;
+  }
+
+  update(dt) {
+    const dtSec = dt / 1000;
+    switch (this.state) {
+      case 'PARKED':
+        // Check delay warning
+        if (!this.delayWarned && (Date.now() - this.spawnTime) > DELAY_WARN_MS) {
+          this.delayWarned = true;
+          logWarn(`⚠ ${this.callsign}: Waiting too long at gate – penalty`);
+          score += SCORE_DELAY;
+          incidents++;
+          updateScoreDisplay();
+        }
+        break;
+      case 'PUSHBACK':
+        this._movePushback(dtSec);
+        break;
+      case 'TAXI':
+        this._moveTaxi(dtSec);
+        break;
+      case 'CROSSING':
+        // Stopped – waiting for clearance
+        break;
+      case 'HOLDING':
+        // Waiting at holding point – tower handoff simulated
+        break;
+      case 'READY':
+        // Departure countdown handled externally
+        break;
+    }
+  }
+
+  _movePushback(dtSec) {
+    if (!this.pushTarget) return;
+    const tgt = NODES[this.pushTarget];
+    const dx = tgt.x - this.x;
+    const dy = tgt.y - this.y;
+    const d  = Math.hypot(dx, dy);
+    if (d < 2) {
+      this.x = tgt.x; this.y = tgt.y;
+      this.nodeId = this.pushTarget;
+      this.state = 'PARKED'; // wait for taxi instruction
+      this.pushTarget = null;
+      logSys(`${this.callsign}: Pushback complete, ready for taxi`);
+    } else {
+      const step = Math.min(PUSH_SPEED * dtSec, d);
+      this.x += (dx / d) * step;
+      this.y += (dy / d) * step;
+      this.heading = Math.atan2(dy, dx) * 180 / Math.PI;
+    }
+  }
+
+  _moveTaxi(dtSec) {
+    if (this.pathIdx >= this.path.length) {
+      // Reached destination
+      this.nodeId = this.destId;
+      if (HOLDING_NODES.has(this.destId)) {
+        this.state = 'HOLDING';
+        logSys(`${this.callsign}: Holding short of runway, ready for departure`);
+        // Schedule departure
+        this._departureTimer = rand(DEPART_DELAY_MIN, DEPART_DELAY_MAX);
+      }
+      return;
+    }
+    const step = this.path[this.pathIdx];
+    const edge = step.edge;
+    // Check if this edge crosses a runway and we need clearance
+    if (edge.cross && !this.crossClearance.has(edge.cross)) {
+      // Stop at current node (from node of this edge)
+      this.state = 'CROSSING';
+      logSys(`${this.callsign}: Holding short of runway ${edge.cross}`);
+      return;
+    }
+    const toNode = NODES[step.to];
+    const dx = toNode.x - this.x;
+    const dy = toNode.y - this.y;
+    const d  = Math.hypot(dx, dy);
+    if (d < 2) {
+      this.x = toNode.x; this.y = toNode.y;
+      this.nodeId = step.to;
+      this.pathIdx++;
+    } else {
+      const spd = TAXI_SPEED * dtSec;
+      const mv  = Math.min(spd, d);
+      this.x += (dx / d) * mv;
+      this.y += (dy / d) * mv;
+      this.heading = Math.atan2(dy, dx) * 180 / Math.PI;
+    }
+  }
+
+  updateDeparture(dt) {
+    if (this.state !== 'HOLDING') return;
+    this._departureTimer -= dt;
+    if (this._departureTimer <= 0) {
+      this.state = 'DEPARTED';
+      score += SCORE_DEPART;
+      updateScoreDisplay();
+      logATC(`Heathrow Tower: ${this.callsign}, runway ${this.runway || '09L'}, cleared for take-off`);
+      logPilot(`${this.callsign}: Cleared for take-off, ${airlineName(this.callsign)}, good day`);
+      logSys(`✓ ${this.callsign}: Departed. +${SCORE_DEPART} pts`);
+    }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+//  SPAWN AIRCRAFT
+// ─────────────────────────────────────────────────────────────
+let occupiedGates = new Set();
+
+function spawnAircraft() {
+  const available = ALL_GATES.filter(g => !occupiedGates.has(g));
+  if (!available.length) return;
+  const gate = randItem(available);
+  const cs = generateCallsign();
+  const type = randItem(AC_TYPES);
+  occupiedGates.add(gate);
+  const ac = new Aircraft(cs, gate, type);
+  aircraft.push(ac);
+  logSys(`► ${cs} (${type}) ready at gate ${NODES[gate].label}`);
+}
+
+function getSpawnInterval() {
+  // Starts at 50s, decreases to 10s over 10 minutes
+  const minSec = 10000, maxSec = 50000;
+  const progress = Math.min(gameTime / 600000, 1);
+  return maxSec - (maxSec - minSec) * progress;
+}
+
+// ─────────────────────────────────────────────────────────────
+//  INSTRUCTION PARSER
+// ─────────────────────────────────────────────────────────────
+function parseInstruction(raw) {
+  const txt = raw.trim();
+  if (!txt) return;
+
+  // Try to find callsign at start (word before first comma)
+  const commaIdx = txt.indexOf(',');
+  if (commaIdx < 0) { logWarn('Bad format – include callsign'); return; }
+  const cs = txt.slice(0, commaIdx).trim().toUpperCase();
+  const ac = aircraft.find(a => a.callsign === cs && a.state !== 'DEPARTED');
+  if (!ac) { logWarn(`Unknown callsign: ${cs}`); return; }
+
+  const body = txt.slice(commaIdx + 1).toLowerCase();
+
+  // PUSHBACK
+  if (body.includes('pushback approved') || body.includes('pushback')) {
+    logATC(`Heathrow Ground: ${cs}, pushback approved, facing east`);
+    if (ac.state !== 'PARKED') {
+      logPilot(`${cs}: Unable, we are ${ac.state}`);
+      return;
+    }
+    ac.startPushback();
+    updateStrips();
+    return;
+  }
+
+  // CROSS RUNWAY
+  const crossMatch = body.match(/cross\s+runway\s+([\w\/]+)/);
+  if (crossMatch) {
+    const rwy = crossMatch[1].toUpperCase();
+    logATC(`Heathrow Ground: ${cs}, cross runway ${rwy}, report vacated`);
+    ac.grantCross(rwy);
+    if (ac.state === 'CROSSING') ac.state = 'TAXI';
+    updateStrips();
+    return;
+  }
+
+  // TAXI
+  const taxiMatch = body.match(/taxi\s+to\s+holding\s+point\s+(.+?)(?:\s+via\s+(.+))?$/);
+  if (taxiMatch) {
+    const destRaw = taxiMatch[1].trim().replace(/[.,]/g,'');
+    const viaRaw  = taxiMatch[2] ? taxiMatch[2].trim() : '';
+    // Resolve destination
+    let destId = null;
+    const destKey = destRaw.toLowerCase();
+    if (HOLDING_ALIASES[destKey]) {
+      destId = HOLDING_ALIASES[destKey];
+    } else {
+      // Try direct node ID match
+      const nodeKey = Object.keys(NODES).find(k => k.toLowerCase() === destKey);
+      if (nodeKey) destId = nodeKey;
+    }
+    if (!destId) {
+      logWarn(`Unknown holding point: ${destRaw}`);
+      logPilot(`${cs}: Say again`);
+      return;
+    }
+    // Parse via taxiways
+    const taxiways = viaRaw ? viaRaw.split(/[,\s]+/).filter(Boolean) : [];
+    // Validate: aircraft must not be PARKED at original gate (must have pushed back)
+    if (ac.state === 'PARKED' && ac.nodeId === ac.gateId) {
+      logWarn(`${cs}: Has not pushed back yet`);
+      logPilot(`${cs}: Unable, still at gate`);
+      return;
+    }
+    const ok = ac.startTaxi(destId, taxiways.length ? taxiways : ['direct']);
+    if (ok) {
+      logATC(`Heathrow Ground: ${cs}, taxi to ${NODES[destId].label} via ${taxiways.join(' ')|| 'direct'}`);
+    }
+    updateStrips();
+    return;
+  }
+
+  // Unknown
+  logPilot(`${cs}: Say again`);
+  logWarn(`Unrecognised instruction`);
+}
+
+// ─────────────────────────────────────────────────────────────
+//  SCORE / UI UPDATE
+// ─────────────────────────────────────────────────────────────
+function updateScoreDisplay() {
+  document.getElementById('score-val').textContent = score;
+  document.getElementById('inc-val').textContent = incidents;
+}
+
+function updateStrips() {
+  const container = document.getElementById('strips-container');
+  const active = aircraft.filter(a => a.state !== 'DEPARTED');
+  container.innerHTML = '';
+  for (const ac of active) {
+    const div = document.createElement('div');
+    div.className = 'flight-strip';
+    if (ac.callsign === selectedAC) div.classList.add('selected');
+    if (['TAXI','PUSHBACK','HOLDING','CROSSING'].includes(ac.state)) div.classList.add('active');
+    if (ac.delayWarned) div.classList.add('delayed');
+    div.innerHTML = `
+      <div class="strip-callsign">${ac.callsign} <span style="color:#3a7a3a;font-size:10px">${ac.acType}</span></div>
+      <div class="strip-info">Gate: ${NODES[ac.gateId].label}</div>
+      <div class="strip-status">${ac.state}${ac.runway ? ' · RWY '+ac.runway : ''}</div>
+    `;
+    div.addEventListener('click', () => {
+      selectedAC = ac.callsign;
+      document.getElementById('cmd-input').value = ac.callsign + ', Heathrow Ground, ';
+      document.getElementById('cmd-input').focus();
+      updateStrips();
+    });
+    container.appendChild(div);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+//  CANVAS RENDERING
+// ─────────────────────────────────────────────────────────────
+const canvas = document.getElementById('atcCanvas');
+const ctx    = canvas.getContext('2d');
+
+function tx(x) { return x * (canvas.width  / LOGICAL_W); }
+function ty(y) { return y * (canvas.height / LOGICAL_H); }
+function ts(s) { return s * Math.min(canvas.width / LOGICAL_W, canvas.height / LOGICAL_H); }
+
+function resizeCanvas() {
+  const wrap = document.getElementById('canvas-wrap');
+  canvas.width  = wrap.clientWidth;
+  canvas.height = wrap.clientHeight;
+}
+
+function drawScene() {
+  // Background
+  ctx.fillStyle = '#020802';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  drawInfieldAreas();
+  drawTaxiways();
+  drawRunways();
+  drawTerminals();
+  drawHoldingBars();
+  drawLabels();
+  drawAircraft();
+}
+
+function drawInfieldAreas() {
+  // Infield between runways
+  ctx.fillStyle = '#030b03';
+  ctx.fillRect(tx(80), ty(210), tx(1040)-tx(80), ty(420)-ty(210));
+}
+
+function drawTaxiways() {
+  // Helper to draw a taxiway segment
+  const drawSeg = (x1,y1,x2,y2,col,width,cross) => {
+    ctx.save();
+    ctx.strokeStyle = cross ? '#3a2a0a' : '#162a16';
+    ctx.lineWidth   = ts(9);
+    ctx.lineCap     = 'round';
+    if (cross) ctx.setLineDash([ts(8), ts(6)]);
+    else ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(tx(x1), ty(y1));
+    ctx.lineTo(tx(x2), ty(y2));
+    ctx.stroke();
+    // Centreline
+    ctx.strokeStyle = cross ? '#6a4a0a' : '#1a4a1a';
+    ctx.lineWidth   = ts(1.5);
+    ctx.setLineDash([ts(10), ts(8)]);
+    ctx.beginPath();
+    ctx.moveTo(tx(x1), ty(y1));
+    ctx.lineTo(tx(x2), ty(y2));
+    ctx.stroke();
+    ctx.restore();
+  };
+
+  // Draw all edges (deduplicate by sorted pair)
+  const drawn = new Set();
+  for (const [a, b, tw, cross] of EDGES_DEF) {
+    const key = [a,b].sort().join('|');
+    if (drawn.has(key)) continue;
+    drawn.add(key);
+    const na = NODES[a], nb = NODES[b];
+    if (!na || !nb) continue;
+    drawSeg(na.x, na.y, nb.x, nb.y, tw, 9, !!cross);
+  }
+}
+
+function drawRunways() {
+  // 09L/27R north (y=200)
+  ctx.save();
+  ctx.fillStyle = '#1a281a';
+  ctx.fillRect(tx(80), ty(190), tx(1120)-tx(80), ty(210)-ty(190));
+  // 09R/27L south (y=430)
+  ctx.fillRect(tx(80), ty(420), tx(1120)-tx(80), ty(440)-ty(420));
+  // Runway centerlines
+  ctx.strokeStyle = '#ffffff22';
+  ctx.lineWidth = ts(1.5);
+  ctx.setLineDash([ts(20), ts(15)]);
+  ctx.beginPath(); ctx.moveTo(tx(80),ty(200)); ctx.lineTo(tx(1120),ty(200)); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(tx(80),ty(430)); ctx.lineTo(tx(1120),ty(430)); ctx.stroke();
+  ctx.setLineDash([]);
+  // Threshold markings 09L/27R
+  for (let i = 0; i < 6; i++) {
+    ctx.fillStyle = '#2a4a2a';
+    ctx.fillRect(tx(90 + i*12), ty(192), ts(8), ts(16));
+    ctx.fillRect(tx(1072 - i*12), ty(192), ts(8), ts(16));
+  }
+  // Threshold markings 09R/27L
+  for (let i = 0; i < 6; i++) {
+    ctx.fillRect(tx(90 + i*12), ty(422), ts(8), ts(16));
+    ctx.fillRect(tx(1072 - i*12), ty(422), ts(8), ts(16));
+  }
+  // Labels
+  ctx.font = `bold ${ts(14)}px Courier New`;
+  ctx.fillStyle = '#2a5a2a';
+  ctx.fillText('09L', tx(88), ty(198));
+  ctx.fillText('27R', tx(1075), ty(198));
+  ctx.fillText('09R', tx(88), ty(428));
+  ctx.fillText('27L', tx(1075), ty(428));
+  ctx.restore();
+}
+
+function drawTerminals() {
+  const terms = [
+    // T5: far west
+    { x:5,   y:95,  w:65,  h:350, label:'T5' },
+    // T2: north central
+    { x:300, y:20,  w:240, h:80,  label:'T2' },
+    // T3: north central east
+    { x:595, y:20,  w:270, h:80,  label:'T3' },
+    // T4: south east
+    { x:700, y:490, w:285, h:80,  label:'T4' },
+  ];
+  ctx.save();
+  for (const t of terms) {
+    ctx.fillStyle   = '#060e06';
+    ctx.strokeStyle = '#b07808';
+    ctx.lineWidth   = ts(1.5);
+    ctx.fillRect(tx(t.x), ty(t.y), tx(t.x+t.w)-tx(t.x), ty(t.y+t.h)-ty(t.y));
+    ctx.strokeRect(tx(t.x), ty(t.y), tx(t.x+t.w)-tx(t.x), ty(t.y+t.h)-ty(t.y));
+    ctx.fillStyle = '#b07808';
+    ctx.font = `bold ${ts(11)}px Courier New`;
+    ctx.fillText(t.label, tx(t.x + t.w/2) - ts(8), ty(t.y + t.h/2) + ts(4));
+  }
+  ctx.restore();
+}
+
+function drawHoldingBars() {
+  const hps = [
+    { id:'FH1',  side:'west' },
+    { id:'EH1',  side:'east' },
+    { id:'FH2',  side:'west' },
+    { id:'EH2',  side:'east' },
+    { id:'HP09L',side:'west' },
+    { id:'HP27R',side:'east' },
+    { id:'HP09R',side:'west' },
+    { id:'HP27L',side:'east' },
+  ];
+  ctx.save();
+  ctx.strokeStyle = '#c8800a';
+  ctx.lineWidth   = ts(3);
+  for (const hp of hps) {
+    const n = NODES[hp.id];
+    if (!n) continue;
+    const bx = tx(n.x), by = ty(n.y);
+    const len = ts(14);
+    ctx.beginPath();
+    ctx.moveTo(bx - len, by - ts(5));
+    ctx.lineTo(bx + len, by - ts(5));
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(bx - len, by + ts(5));
+    ctx.lineTo(bx + len, by + ts(5));
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawLabels() {
+  ctx.save();
+  ctx.font = `${ts(9)}px Courier New`;
+  // Taxiway name labels along key positions
+  const twLabels = [
+    { text:'α ALPHA',   x:650, y:122 },
+    { text:'β BRAVO',   x:650, y:257 },
+    { text:'γ CHARLIE', x:650, y:337 },
+    { text:'δ DELTA',   x:650, y:460 },
+    { text:'F FOXTROT', x:214, y:310 },
+    { text:'E ECHO',    x:964, y:310 },
+  ];
+  ctx.fillStyle = '#1a6a1a';
+  for (const l of twLabels) {
+    ctx.fillText(l.text, tx(l.x), ty(l.y));
+  }
+  // Holding point labels (amber)
+  ctx.fillStyle = '#c8800a';
+  ctx.font = `bold ${ts(9)}px Courier New`;
+  const hpLabels = [
+    { id:'FH1',  offset:[-40,-10] },
+    { id:'EH1',  offset:[8,-10]   },
+    { id:'FH2',  offset:[-40,-10] },
+    { id:'EH2',  offset:[8,-10]   },
+    { id:'HP09L',offset:[-40,16]  },
+    { id:'HP27R',offset:[6,16]    },
+    { id:'HP09R',offset:[-40,16]  },
+    { id:'HP27L',offset:[6,16]    },
+  ];
+  for (const l of hpLabels) {
+    const n = NODES[l.id]; if (!n) continue;
+    ctx.fillText(n.label, tx(n.x) + ts(l.offset[0]/8), ty(n.y) + ts(l.offset[1]/8));
+  }
+  ctx.restore();
+}
+
+function drawAircraft() {
+  for (const ac of aircraft) {
+    if (ac.state === 'DEPARTED') continue;
+    const x = tx(ac.x), y = ty(ac.y);
+    let color = '#00ff41'; // green = taxiing
+    if (ac.callsign === selectedAC)         color = '#ffb347'; // amber = selected
+    else if (ac.state === 'HOLDING')        color = '#00ffff'; // cyan = ready
+    else if (ac.state === 'CROSSING')       color = '#ff8800'; // orange = needs crossing
+    else if (ac.state === 'PARKED')         color = '#2a7a2a'; // dim = parked
+
+    const size = ts(10);
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate((ac.heading + 90) * Math.PI / 180);
+    ctx.beginPath();
+    ctx.moveTo(0, -size);
+    ctx.lineTo(size * 0.6, size * 0.7);
+    ctx.lineTo(0, size * 0.3);
+    ctx.lineTo(-size * 0.6, size * 0.7);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = ts(0.5);
+    ctx.stroke();
+    ctx.restore();
+
+    // Label
+    ctx.save();
+    ctx.font = `bold ${ts(9)}px Courier New`;
+    ctx.fillStyle = color;
+    ctx.fillText(ac.callsign, x + ts(2), y - ts(12));
+    ctx.restore();
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+//  GAME LOOP
+// ─────────────────────────────────────────────────────────────
+function gameLoop(timestamp) {
+  const dt = lastTime ? timestamp - lastTime : 16;
+  lastTime = timestamp;
+  gameTime += dt;
+
+  // Update aircraft
+  for (const ac of aircraft) {
+    ac.update(dt);
+    ac.updateDeparture(dt);
+  }
+
+  // Remove fully departed aircraft after a bit
+  for (const ac of aircraft) {
+    if (ac.state === 'DEPARTED') {
+      occupiedGates.delete(ac.gateId);
+    }
+  }
+  const before = aircraft.length;
+  aircraft = aircraft.filter(a => a.state !== 'DEPARTED');
+  if (aircraft.length < before) updateStrips();
+
+  // Spawn
+  spawnTimer -= dt;
+  if (spawnTimer <= 0) {
+    spawnAircraft();
+    spawnTimer = getSpawnInterval();
+    updateStrips();
+  }
+
+  // Clock
+  document.getElementById('clock').textContent = zuluTime();
+
+  // Render
+  drawScene();
+
+  requestAnimationFrame(gameLoop);
+}
+
+// ─────────────────────────────────────────────────────────────
+//  TAB AUTOCOMPLETE
+// ─────────────────────────────────────────────────────────────
+document.getElementById('cmd-input').addEventListener('keydown', e => {
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    const inp = document.getElementById('cmd-input');
+    const val = inp.value;
+    // Find partial callsign at start
+    const partial = val.split(',')[0].trim().toUpperCase();
+    if (!partial) return;
+    const match = aircraft.find(a => a.callsign.startsWith(partial) && a.state !== 'DEPARTED');
+    if (match) {
+      inp.value = match.callsign + ', Heathrow Ground, ';
+      selectedAC = match.callsign;
+      updateStrips();
+    }
+  }
+  if (e.key === 'Enter') {
+    document.getElementById('send-btn').click();
+  }
+});
+
+document.getElementById('send-btn').addEventListener('click', () => {
+  const inp = document.getElementById('cmd-input');
+  const val = inp.value.trim();
+  if (!val) return;
+  parseInstruction(val);
+  inp.value = '';
+  updateStrips();
+});
+
+// ─────────────────────────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────────────────────────
+window.addEventListener('resize', () => { resizeCanvas(); });
+
+resizeCanvas();
+
+// Initial log messages
+logATC('Heathrow Ground 121.700 MHz – Online');
+logSys('SQUAWK Ground Simulation – EGLL');
+logSys('Type instructions in the box below');
+
+// Initial spawn
+spawnAircraft();
+spawnAircraft();
+spawnTimer = getSpawnInterval();
+
+updateStrips();
+updateScoreDisplay();
+
+requestAnimationFrame(gameLoop);
+</script>
+</body>
+</html>
