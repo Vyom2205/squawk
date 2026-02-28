@@ -137,6 +137,7 @@
   .log-pilot { color: #00ff41; }
   .log-system { color: #ff6600; }
   .log-warn { color: #ff4444; }
+  .log-ts { color: #2a5a2a; font-size: 9px; }
   /* Bottom bar */
   #bottom-bar {
     background: #010501;
@@ -458,9 +459,10 @@ function bfsPath(startId, goalId) {
   const prev = {};
   const prevEdge = {};
   const queue = [startId];
+  let head = 0; // read index – avoids O(n) shift()
   prev[startId] = null;
-  while (queue.length) {
-    const cur = queue.shift();
+  while (head < queue.length) {
+    const cur = queue[head++];
     for (const edge of (GRAPH[cur] || [])) {
       const { to } = edge;
       if (!(to in prev)) {
@@ -504,7 +506,7 @@ const HOLDING_NODES = new Set(['FH1','EH1','FH2','EH2','HP09L','HP27R','HP09R','
 //  UTILITY
 // ─────────────────────────────────────────────────────────────
 function rand(min, max) { return Math.random() * (max - min) + min; }
-function randInt(min, max) { return Math.floor(rand(min, max + 1)); }
+function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 function randItem(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
 function zuluTime() {
@@ -523,7 +525,7 @@ function dist(ax, ay, bx, by) {
 //  RADIO LOG
 // ─────────────────────────────────────────────────────────────
 function log(msg, cls='log-system') {
-  logLines.push({ msg, cls });
+  logLines.push({ msg, cls, t: zuluTime() });
   if (logLines.length > 120) logLines.shift();
   renderLog();
 }
@@ -534,7 +536,7 @@ function logWarn(msg)   { log(msg, 'log-warn'); }
 
 function renderLog() {
   const el = document.getElementById('radio-log');
-  el.innerHTML = logLines.map(l => `<div class="${l.cls}">${l.msg}</div>`).join('');
+  el.innerHTML = logLines.map(l => `<span class="log-ts">${l.t}</span> <span class="${l.cls}">${l.msg}</span><br>`).join('');
   el.scrollTop = el.scrollHeight;
 }
 
@@ -834,7 +836,7 @@ function parseInstruction(raw) {
     }
     const ok = ac.startTaxi(destId, taxiways.length ? taxiways : ['direct']);
     if (ok) {
-      logATC(`Heathrow Ground: ${cs}, taxi to ${NODES[destId].label} via ${taxiways.join(' ')|| 'direct'}`);
+      logATC(`Heathrow Ground: ${cs}, taxi to ${NODES[destId].label} via ${taxiways.join(' ') || 'direct'}`);
     }
     updateStrips();
     return;
@@ -1001,8 +1003,8 @@ function drawTerminals() {
     ctx.fillStyle   = '#060e06';
     ctx.strokeStyle = '#b07808';
     ctx.lineWidth   = ts(1.5);
-    ctx.fillRect(tx(t.x), ty(t.y), tx(t.x+t.w)-tx(t.x), ty(t.y+t.h)-ty(t.y));
-    ctx.strokeRect(tx(t.x), ty(t.y), tx(t.x+t.w)-tx(t.x), ty(t.y+t.h)-ty(t.y));
+    ctx.fillRect(tx(t.x), ty(t.y), tx(t.w), ty(t.h));
+    ctx.strokeRect(tx(t.x), ty(t.y), tx(t.w), ty(t.h));
     ctx.fillStyle = '#b07808';
     ctx.font = `bold ${ts(11)}px Courier New`;
     ctx.fillText(t.label, tx(t.x + t.w/2) - ts(8), ty(t.y + t.h/2) + ts(4));
